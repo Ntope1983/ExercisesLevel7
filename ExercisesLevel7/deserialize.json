@@ -1,0 +1,32 @@
+[
+  {
+    "FirstName": "Giannis",
+    "LastName": "Papadakis",
+    "Age": 41,
+    "Email": "giannis.papadakis@example.com"
+  },
+  {
+    "FirstName": "Maria",
+    "LastName": "Nikolaou",
+    "Age": 29,
+    "Email": "maria.nikolaou@example.com"
+  },
+  {
+    "FirstName": "Kostas",
+    "LastName": "Georgiou",
+    "Age": 36,
+    "Email": "kostas.georgiou@example.com"
+  },
+  {
+    "FirstName": "Eleni",
+    "LastName": "Alexiou",
+    "Age": 33,
+    "Email": "eleni.alexiou@example.com"
+  },
+  {
+    "FirstName": "Dimitris",
+    "LastName": "Kostopoulos",
+    "Age": 47,
+    "Email": "dimitris.kostopoulos@example.com"
+  }
+]

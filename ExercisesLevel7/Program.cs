@@ -1,109 +1,8 @@
-﻿public class Program
+﻿namespace ProductApp
 {
-    private static void Main(string[] args)
-    {
-        Exercise29();
-
-    }
-    public static void Exercise29()
-    {
-        Product tv = new Product(1, "Tv Tesla", 125m);
-        Product mobile = new Product(2, "Xiaomi Redmi 8 Pro", 125m);
-        Product xbox = new Product(3, "Xbox 2025", 300);
-        InMemoryProductRepository _inMemoryProductRepository = new InMemoryProductRepository();
-        _inMemoryProductRepository.Add(tv);
-        _inMemoryProductRepository.Add(mobile);
-        _inMemoryProductRepository.Add(xbox);
-        string menu = "Please select an operation:\n" +
-                      "1. Get Products\n" +
-                      "2. Add Product\n" +
-                      "3. Delete Product By id\n" +
-                      "4. Exit\n";
-
-
-        int menuValue;
-
-        while (true)
-        {
-            Console.WriteLine(menu);
-            string choice = Console.ReadLine();
-
-            while (!int.TryParse(choice, out menuValue))
-
-            {
-                Console.WriteLine(menu);
-                Console.WriteLine("Please Give an Integer 1-4");
-                choice = Console.ReadLine();
-
-            }
-            if (menuValue == 4)
-            {
-                break;
-            }
-            else if (menuValue == 1)
-            {
-
-                foreach (Product product in _inMemoryProductRepository.GetProducts())
-                {
-                    Console.WriteLine($"Id:{product.productId} Name:{product.productName} Price:{product.productPrice} Euro");
-                }
-            }
-            else if (menuValue == 2)
-            {
-
-                Console.WriteLine($"Pls give the name from the Product");
-                string ProductName = Console.ReadLine();
-                Console.WriteLine($"Pls give the Price from the Product");
-                string StringProductPrice = Console.ReadLine();
-                decimal ProductPrice;
-                decimal.TryParse(StringProductPrice, out ProductPrice);
-                int id;
-                var products = _inMemoryProductRepository.GetProducts();
-
-                if (products.Any())
-                {
-                    id = products.Max(p => p.productId) + 1;
-                }
-                else
-                {
-                    id = 1;
-                }
-                _inMemoryProductRepository.Add(new Product(id, ProductName, ProductPrice));
-            }
-            else if (menuValue == 3)
-            {
-                Console.WriteLine($"Pls give the id from the Product u want to delete");
-                string idStringToDelete = Console.ReadLine();
-                int idToDelete;
-                while (!int.TryParse(idStringToDelete, out idToDelete))
-                {
-                    Console.WriteLine($"Pls give an Integer");
-                    idStringToDelete = Console.ReadLine();
-                }
-
-                _inMemoryProductRepository.DeleteById(idToDelete);
-            }
-        }
-
-    }
-
-    static int ReadNumber(string message)
-    {
-        int number;
-        string input;
-
-        Console.WriteLine(message);
-        input = Console.ReadLine();
-
-        while (!int.TryParse(input, out number))
-        {
-            Console.WriteLine("Please give again a valid number");
-            input = Console.ReadLine();
-        }
-
-        return number;
-    }
-    //Model of Product
+    // ========================
+    // Model
+    // ========================
     public class Product
     {
         public Product(int id, string name, decimal price)
@@ -112,48 +11,171 @@
             productName = name;
             productPrice = price;
         }
+
         public int productId { get; set; }
         public string productName { get; set; }
         public decimal productPrice { get; set; }
     }
+
+    // ========================
+    // Repository Interface
+    // ========================
     public interface IProductRepository
     {
         IEnumerable<Product> GetProducts();
-        public Product GetById(int id);
-        public void Add(Product product);
-        public void DeleteById(int id);
+        Product? GetById(int id);
+        void Add(Product product);
+        void DeleteById(int id);
     }
+
+    // ========================
+    // InMemory Repository
+    // ========================
     public class InMemoryProductRepository : IProductRepository
     {
         private readonly List<Product> _products = new();
 
-        public IEnumerable<Product> GetProducts()
-        {
-            return _products;
-        }
-        public Product? GetById(int id)
-        {
-            return _products.FirstOrDefault(p => p.productId == id);
+        public IEnumerable<Product> GetProducts() => _products;
 
-        }
+        public Product? GetById(int id) => _products.FirstOrDefault(p => p.productId == id);
+
         public void Add(Product product)
         {
             _products.Add(product);
-            Console.WriteLine($"The product {product.productName} with   has been Added InMemoryProductRepository");
+            Console.WriteLine($"The product {product.productName} with id {product.productId} has been added.");
         }
+
         public void DeleteById(int id)
         {
-            Product removeproduct = this.GetById(id);
-            if (removeproduct != null)
+            var product = GetById(id);
+            if (product != null)
             {
-                _products.Remove(removeproduct);
-                Console.WriteLine($"The product with id:{id} has been removed");
+                _products.Remove(product);
+                Console.WriteLine($"The product with id {id} has been removed.");
             }
             else
             {
-                Console.WriteLine($"The product with id:{id} is not in InMemoryProductRepository");
+                Console.WriteLine($"The product with id {id} was not found.");
             }
         }
+    }
 
+    // ========================
+    // Service Layer Interface
+    // ========================
+    public interface IProductService
+    {
+        IEnumerable<Product> GetAllProducts();
+        Product? GetProductById(int id);
+        void AddProduct(string name, decimal price);
+        void DeleteProduct(int id);
+    }
+
+    // ========================
+    // Service Layer Implementation
+    // ========================
+    public class ProductService : IProductService
+    {
+        private readonly IProductRepository _repository;
+
+        public ProductService(IProductRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public IEnumerable<Product> GetAllProducts() => _repository.GetProducts();
+
+        public Product? GetProductById(int id) => _repository.GetById(id);
+
+        public void AddProduct(string name, decimal price)
+        {
+            int id = _repository.GetProducts().Any()
+                ? _repository.GetProducts().Max(p => p.productId) + 1
+                : 1;
+
+            var product = new Product(id, name, price);
+            _repository.Add(product);
+        }
+
+        public void DeleteProduct(int id) => _repository.DeleteById(id);
+    }
+
+    // ========================
+    // Program
+    // ========================
+    public class Program
+    {
+        static void Main(string[] args)
+        {
+            // Δημιουργία repository και service
+            IProductRepository repository = new InMemoryProductRepository();
+            IProductService productService = new ProductService(repository);
+
+            // Προσθήκη αρχικών προϊόντων
+            productService.AddProduct("Tv Tesla", 125m);
+            productService.AddProduct("Xiaomi Redmi 8 Pro", 125m);
+            productService.AddProduct("Xbox 2025", 300m);
+
+            string menu = "Please select an operation:\n" +
+                          "1. Get Products\n" +
+                          "2. Add Product\n" +
+                          "3. Delete Product By id\n" +
+                          "4. Exit\n";
+
+            int menuValue;
+
+            while (true)
+            {
+                Console.WriteLine(menu);
+                string choice = Console.ReadLine();
+
+                while (!int.TryParse(choice, out menuValue))
+                {
+                    Console.WriteLine("Please give an integer 1-4");
+                    choice = Console.ReadLine();
+                }
+
+                if (menuValue == 4) break;
+
+                switch (menuValue)
+                {
+                    case 1: // Get Products
+                        foreach (var product in productService.GetAllProducts())
+                        {
+                            Console.WriteLine($"Id: {product.productId}, Name: {product.productName}, Price: {product.productPrice} Euro");
+                        }
+                        break;
+
+                    case 2: // Add Product
+                        Console.WriteLine("Enter product name:");
+                        string name = Console.ReadLine();
+
+                        Console.WriteLine("Enter product price:");
+                        decimal price;
+                        while (!decimal.TryParse(Console.ReadLine(), out price))
+                        {
+                            Console.WriteLine("Please enter a valid decimal number for price.");
+                        }
+
+                        productService.AddProduct(name, price);
+                        break;
+
+                    case 3: // Delete Product
+                        Console.WriteLine("Enter the id of the product to delete:");
+                        int idToDelete;
+                        while (!int.TryParse(Console.ReadLine(), out idToDelete))
+                        {
+                            Console.WriteLine("Please enter a valid integer.");
+                        }
+
+                        productService.DeleteProduct(idToDelete);
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid choice. Please enter 1-4.");
+                        break;
+                }
+            }
+        }
     }
 }

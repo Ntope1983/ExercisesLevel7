@@ -1,117 +1,152 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using static Product;
 // ========================
 // Model
 // ========================
 
 
-public class Product
+public class Middleware
 {
-    public Product(int id, string name, decimal price)
+    private readonly Func<Task> _next;
+
+    public Middleware(Func<Task> next)
     {
-        productId = id;
-        productName = name;
-        productPrice = price;
+        _next = next;
     }
 
-    public int productId { get; set; }
-    public string productName { get; set; }
-    public decimal productPrice { get; set; }
-}
-
-// ========================
-// Repository Interface
-// ========================
-public interface IProductRepository
-{
-    IEnumerable<Product> GetProducts();
-    Product? GetById(int id);
-    void Add(Product product);
-    void DeleteById(int id);
-}
-
-// ========================
-// InMemory Repository
-// ========================
-public class InMemoryProductRepository : IProductRepository
-{
-    private readonly List<Product> _products = new();
-
-    public IEnumerable<Product> GetProducts() => _products;
-
-    public Product? GetById(int id) => _products.FirstOrDefault(p => p.productId == id);
-
-    public void Add(Product product)
+    public async Task InvokeAsync()
     {
-        _products.Add(product);
-        Console.WriteLine($"The product {product.productName} with id {product.productId} has been added.");
-    }
-
-    public void DeleteById(int id)
-    {
-        var product = GetById(id);
-        if (product != null)
-        {
-            _products.Remove(product);
-            Console.WriteLine($"The product with id {id} has been removed.");
-        }
-        else
-        {
-            Console.WriteLine($"The product with id {id} was not found.");
-        }
+        Console.WriteLine("Before");      // Εκτύπωση πριν την εκτέλεση
+        await _next();                    // Εκτέλεση του delegate
+        Console.WriteLine("After");       // Εκτύπωση μετά την εκτέλεση
     }
 }
 
-// ========================
-// Service Layer Interface
-// ========================
-public interface IProductService
-{
-    IEnumerable<Product> GetAllProducts();
-    Product? GetProductById(int id);
-    void AddProduct(string name, decimal price);
-    void DeleteProduct(int id);
-}
-
-// ========================
-// Service Layer Implementation
-// ========================
-public class ProductService : IProductService
-{
-    private readonly IProductRepository _repository;
-
-    public ProductService(IProductRepository repository)
-    {
-        _repository = repository;
-    }
-
-    public IEnumerable<Product> GetAllProducts() => _repository.GetProducts();
-
-    public Product? GetProductById(int id) => _repository.GetById(id);
-
-    public void AddProduct(string name, decimal price)
-    {
-        int id = _repository.GetProducts().Any()
-            ? _repository.GetProducts().Max(p => p.productId) + 1
-            : 1;
-
-        var product = new Product(id, name, price);
-        _repository.Add(product);
-    }
-
-    public void DeleteProduct(int id) => _repository.DeleteById(id);
-}
-
+// Παράδειγμα χρήσης
 // ========================
 // Program
 // ========================
 public class Program
 {
-    static void Main(string[] args)
+    public static void Main()
     {
-        DeSerializeToJson();
-
+        InMemoryProductRepository MyRepository = new InMemoryProductRepository();
+        string jsonData = File.ReadAllText(@"C:\Users\g_pol\source\repos\C#\ExercisesLevel7\ExercisesLevel7\deserializeProduct.json");
+        var productList = JsonSerializer.Deserialize<List<Product>>(jsonData);
+        foreach (Product item in productList)
+        {
+            Console.WriteLine(item.ProductName);
+        }
     }
+
+}
+public class Product
+{
+
+    public Product() { }
+    public Product(int id, string name, decimal price)
+    {
+        ProductId = id;
+        ProductName = name;
+        ProductPrice = price;
+    }
+    [JsonPropertyName("productId")]
+    public int ProductId { get; set; }
+    [JsonPropertyName("productName")]
+    public string ProductName { get; set; }
+    [JsonPropertyName("productPrice")]
+    public decimal ProductPrice { get; set; }
+
+
+
+    // ========================
+    // Repository Interface
+    // ========================
+    public interface IProductRepository
+    {
+        IEnumerable<Product> GetProducts();
+        Product? GetById(int id);
+        void Add(Product product);
+        void DeleteById(int id);
+    }
+
+    // ========================
+    // InMemory Repository
+    // ========================
+    public class InMemoryProductRepository : IProductRepository
+    {
+        private readonly List<Product> _products = new();
+
+        public IEnumerable<Product> GetProducts() => _products;
+
+        public Product? GetById(int id) => _products.FirstOrDefault(p => p.ProductId == id);
+
+        public void Add(Product product)
+        {
+            _products.Add(product);
+            Console.WriteLine($"The product {product.ProductName} with id {product.ProductId} has been added.");
+        }
+
+        public void DeleteById(int id)
+        {
+            var product = GetById(id);
+            if (product != null)
+            {
+                _products.Remove(product);
+                Console.WriteLine($"The product with id {id} has been removed.");
+            }
+            else
+            {
+                Console.WriteLine($"The product with id {id} was not found.");
+            }
+        }
+    }
+
+    // ========================
+    // Service Layer Interface
+    // ========================
+    public interface IProductService
+    {
+        IEnumerable<Product> GetAllProducts();
+        Product? GetProductById(int id);
+        void AddProduct(string name, decimal price);
+        void DeleteProduct(int id);
+    }
+
+    // ========================
+    // Service Layer Implementation
+    // ========================
+    public class ProductService : IProductService
+    {
+        private readonly IProductRepository _repository;
+
+        public ProductService(IProductRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public IEnumerable<Product> GetAllProducts() => _repository.GetProducts();
+
+        public Product? GetProductById(int id) => _repository.GetById(id);
+
+        public void AddProduct(string name, decimal price)
+        {
+            int id = _repository.GetProducts().Any()
+                ? _repository.GetProducts().Max(p => p.ProductId) + 1
+                : 1;
+
+            var product = new Product(id, name, price);
+            _repository.Add(product);
+        }
+
+        public void DeleteProduct(int id) => _repository.DeleteById(id);
+    }
+
+
+
+
     static void Exercise32()
     {
         // Δημιουργία repository και service
@@ -149,7 +184,7 @@ public class Program
                 case 1: // Get Products
                     foreach (var product in productService.GetAllProducts())
                     {
-                        Console.WriteLine($"Id: {product.productId}, Name: {product.productName}, Price: {product.productPrice} Euro");
+                        Console.WriteLine($"Id: {product.ProductId}, Name: {product.ProductName}, Price: {product.ProductPrice} Euro");
                     }
                     break;
 
@@ -184,6 +219,9 @@ public class Program
             }
         }
     }
+    // ============================================
+    // SerializeToJson into a file with json Data
+    // ============================================
     public static void SerializeToJson()
     {
 
@@ -196,32 +234,49 @@ public class Program
             new Person("Dimitris", "Alexandris", 45, "dimitris.alexandris@example.com")
         };
         string json = JsonSerializer.Serialize(people);
-        File.WriteAllText(@"C:\Users\NDF-MO\source\repos\Ntope1983\ExercisesLevel7\ExercisesLevel7\serialize.json", json);
+        File.WriteAllText(@"C:\Users\g_pol\source\repos\C#\ExercisesLevel7\ExercisesLevel7\serialize.json", json);
 
     }
-    public static void DeSerializeToJson()
+    // ============================================
+    // DeSerializeToJson from a file with json Data
+    // ============================================
+    public static void DeSerializeFromJson()
     {
-        string json = File.ReadAllText(@"C:\Users\NDF-MO\source\repos\Ntope1983\ExercisesLevel7\ExercisesLevel7\deserialize.json");
-
-        ASsaa
+        string jsonData = File.ReadAllText(@"C:\Users\g_pol\source\repos\C#\ExercisesLevel7\ExercisesLevel7\deserialize.json");
+        var personList = JsonSerializer.Deserialize<List<Person>>(jsonData);
     }
 
+    public static void DeSerializeProductsFromJson()
+    {
+        string jsonData = File.ReadAllText(@"C:\Users\g_pol\source\repos\C#\ExercisesLevel7\ExercisesLevel7\deserialize.json");
+        var personList = JsonSerializer.Deserialize<List<Product>>(jsonData);
+    }
 }
+
 // ========================
 // Person Class
 // ========================
 public class Person
 {
+
+    [JsonPropertyName("FirstName")]
     public string personName { get; set; }
+
+    [JsonPropertyName("LastName")]
     public string personSurName { get; set; }
+
+    [JsonPropertyName("Age")]
     public int personAge { get; set; }
+
+    [JsonPropertyName("Email")]
     public string personEmail { get; set; }
-    public Person(string Name, string surName, int age, string email)
+    public Person() { }
+    public Person(string FirstName, string LastName, int Age, string Email)
     {
-        personName = Name;
-        personSurName = surName;
-        personAge = age;
-        personEmail = email;
+        personName = FirstName;
+        personSurName = LastName;
+        personAge = Age;
+        personEmail = Email;
     }
     // ========================
     // Check Validation Method Email
@@ -252,4 +307,9 @@ public class Person
 
         return (true, "Έγκυρο email");
     }
+
+
+
+    // Τρέχουμε τη συνάρτηση
+
 }

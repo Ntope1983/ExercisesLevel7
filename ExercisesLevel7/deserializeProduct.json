@@ -1,0 +1,42 @@
+[
+  {
+    "productId": 1,
+    "productName": "Laptop Lenovo IdeaPad",
+    "productPrice": 799.99
+  },
+  {
+    "productId": 2,
+    "productName": "Wireless Mouse Logitech",
+    "productPrice": 24.50
+  },
+  {
+    "productId": 3,
+    "productName": "Mechanical Keyboard Red Switch",
+    "productPrice": 89.90
+  },
+  {
+    "productId": 4,
+    "productName": "27 inch Monitor Samsung",
+    "productPrice": 249.99
+  },
+  {
+    "productId": 5,
+    "productName": "USB-C Hub 6-in-1",
+    "productPrice": 39.95
+  },
+  {
+    "productId": 6,
+    "productName": "External SSD 1TB",
+    "productPrice": 119.00
+  },
+  {
+    "productId": 7,
+    "productName": "Bluetooth Headphones Sony",
+    "productPrice": 159.75
+  },
+  {
+    "productId": 8,
+    "productName": "Webcam Full HD",
+    "productPrice": 54.20
+  }
+]
